@@ -10,6 +10,42 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+
+    @card = {
+            name: "Longbob Longsen",
+            number: "4242424242424242",
+            expiryMonth: "06",
+            expiryYear: "2018",
+            cvv: "100",
+            billingDetails: {
+                addressLine1: "72 Myrna Parkways",
+                addressLine2: "Hoppe Fork",
+                postcode: "aq81ct",
+                country: "US",
+                city: "Serenamouth",
+                state: "Luzmouth",
+                phone: {
+                    countryCode: "44",
+                    number: "12345678"
+                }
+            }
+       }
+
+    @profile = {
+      name: "Longbob Longsen",
+      email: "longbob.longsen@example.com",
+      description: "Minusmaioresvoluptatibussintculpaquasutreiciendisvoluptatem.",
+      phone: {
+        countryCode: "44",
+        number: "12345678"
+      },
+      metadata: {
+        keyname: "testvalue"
+      },
+      card: @credit_card
+    }
+
+
   end
 
   def test_successful_purchase
@@ -149,6 +185,14 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_match %r{Invalid JSON response}, response.message
   end
 
+  def test_successful_create_customer_profile
+    response = stub_comms do
+      @gateway.create_customer_profile(@profile)
+    end.respond_with(successful_create_customer_profile_response)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
 
   private
 
@@ -164,6 +208,59 @@ class CheckoutV2Test < Test::Unit::TestCase
       <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiryYear\":\"2018\"
     )
+  end
+
+  def successful_create_customer_profile_response
+    %(
+    {
+        "id": "cust_49F7E6F8-B990-4E4E-BC58-419A3B0556D0",
+        "responseCode": "10000",
+        "name": "Miss Matt Quigley",
+        "liveMode": true,
+        "created": "2015-04-07T14:52:57Z",
+        "email": "LanaSMartin@dayrep.com",
+        "description": "Minusmaioresvoluptatibussintculpaquasutreiciendisvoluptatem.",
+        "phone": {
+            "countryCode": "44",
+            "number": "12345678"
+        },
+        "metadata": {
+            "keyname": "testvalue"
+        },
+        "cards": {
+            "count": 1,
+            "data": [
+                {
+                    "id": "card_721F541E-EF01-4390-A017-7496BE5BFE54",
+                    "last4": "4242",
+                    "paymentMethod": "VISA",
+                    "fingerprint": "C2FD7FEE-1DE9-4A6F-BC0C-1210D2E86FB9",
+                    "customerId": "cust_49F7E6F8-B990-4E4E-BC58-419A3B0556D0",
+                    "name": "Miss Matt Quigley",
+                    "expiryMonth": "06",
+                    "expiryYear": "2018",
+                    "billingDetails": {
+                        "addressLine1": "72 Myrna Parkways",
+                        "addressLine2": "Hoppe Fork",
+                        "postcode": "aq81ct",
+                        "country": "US",
+                        "city": "Serenamouth",
+                        "state": "Luzmouth",
+                        "phone": {
+                            "countryCode": "44",
+                            "number": "12345678"
+                        }
+                    },
+                    "cvvCheck": null,
+                    "avsCheck": null,
+                    "responseCode": null
+                }
+            ]
+        },
+        "defaultCard": "card_721F541E-EF01-4390-A017-7496BE5BFE54"
+    }
+    )
+
   end
 
   def successful_purchase_response

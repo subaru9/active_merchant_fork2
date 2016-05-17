@@ -14,6 +14,20 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       description: 'Purchase',
       email: "longbob.longsen@example.com"
     }
+
+    @profile = {
+      name: "Longbob Longsen",
+      email: "longbob.longsen@example.com",
+      description: "Minusmaioresvoluptatibussintculpaquasutreiciendisvoluptatem.",
+      phone: {
+        countryCode: "44",
+        number: "12345678"
+      },
+      metadata: {
+        keyname: "testvalue"
+      },
+      card: @credit_card
+    }
   end
 
   def test_transcript_scrubbing
@@ -129,5 +143,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Invalid Card Number}, response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_successful_create_customer_profile
+    binding.pry
+    response = @gateway.create_customer_profile(@profile)
+    assert_success response
+    assert_equal "Succeeded", response.message
   end
 end

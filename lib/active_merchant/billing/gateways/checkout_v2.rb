@@ -72,6 +72,14 @@ module ActiveMerchant #:nodoc:
           gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
+      def create_customer_profile(profile)
+        post = {}
+        add_customer_data(post, profile)
+        add_payment_method(post, profile[:card])
+
+        commit(:customers, post)
+      end
+
       private
 
       def add_invoice(post, money, options)
@@ -138,8 +146,10 @@ module ActiveMerchant #:nodoc:
       def url(post, action, authorization)
         if action == :authorize
           "#{base_url}/charges/card"
-        else
+        elsif action && authorization
           "#{base_url}/charges/#{authorization}/#{action}"
+        else
+          "#{base_url}/#{action}"
         end
       end
 

@@ -15,6 +15,8 @@ require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
 
+require 'pry'
+
 ActiveMerchant::Billing::Base.mode = :test
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
