@@ -28,6 +28,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       },
       card: @credit_card
     }
+
+    @profile_id = 'cust_8AB7845C-35D6-4BAD-BED0-D0D7F75C50F0'
   end
 
   def test_transcript_scrubbing
@@ -146,8 +148,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_create_customer_profile
-    binding.pry
     response = @gateway.create_customer_profile(@profile)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_successful_store
+    @gateway.store(@credit_card, @profile_id)
     assert_success response
     assert_equal "Succeeded", response.message
   end

@@ -45,6 +45,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       card: @credit_card
     }
 
+    @profile_id = 'cust_8AB7845C-35D6-4BAD-BED0-D0D7F75C50F0'
 
   end
 
@@ -193,6 +194,13 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @profile_id)
+    end.respond_with(successful_store_response)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
 
   private
 
@@ -207,6 +215,36 @@ class CheckoutV2Test < Test::Unit::TestCase
     %q(
       <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiryYear\":\"2018\"
+    )
+  end
+
+  def successful_store_response
+    %(
+      {
+          "id": "card_F788DDC3-5D61-4793-BCA2-BB47E3A7A977",
+          "last4": "4242",
+          "paymentMethod": "VISA",
+          "fingerprint": "61308D38-57D5-4DD3-8684-B50F72A5CF7F",
+          "customerId": "cust_8AB7845C-35D6-4BAD-BED0-D0D7F75C50F0",
+          "name": "Miss Matt Quigley",
+          "expiryMonth": "06",
+          "expiryYear": "2018",
+          "billingDetails": {
+              "addressLine1": "56 Layla Rue",
+              "addressLine2": "Junius Plain",
+              "postcode": "ei104xh",
+              "country": "US",
+              "city": "PortDeclan",
+              "state": "Anthony",
+              "phone" : {
+                  "countryCode" : "44",
+                  "number" : "12345678"
+              }
+          },
+          "cvvCheck": "Y",
+          "avsCheck": "S",
+          "responseCode": "10000"
+      }
     )
   end
 

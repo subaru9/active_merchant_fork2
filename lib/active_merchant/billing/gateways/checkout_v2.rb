@@ -74,10 +74,18 @@ module ActiveMerchant #:nodoc:
 
       def create_customer_profile(profile)
         post = {}
-        add_customer_data(post, profile)
         add_payment_method(post, profile[:card])
+        add_customer_data(post, profile)
 
         commit(:customers, post)
+      end
+
+      def store(payment_method, cutomer_id, options={})
+        post = {}
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+        post.delete(:email)
+        commit("customers/#{cutomer_id}/cards", post[:card])
       end
 
       private
