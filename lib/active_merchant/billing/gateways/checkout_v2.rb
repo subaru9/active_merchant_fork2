@@ -80,12 +80,17 @@ module ActiveMerchant #:nodoc:
         commit(:customers, post)
       end
 
-      def store(payment_method, cutomer_id, options={})
+      def store(payment_method, customer_id, options={})
         post = {}
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         post.delete(:email)
-        commit("customers/#{cutomer_id}/cards", post[:card])
+        commit("customers/#{customer_id}/cards", post[:card])
+      end
+
+      def unstore(customer_id, card_id)
+        # TODO: the customer must be assosiated with at least one card, handle this
+        commit("customers/#{customer_id}/cards/#{card_id}", {}, nil, :delete)
       end
 
       private
@@ -123,9 +128,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(action, post, authorization = nil)
+      def commit(action, post, authorization = nil, method = :post)
+        railse ArgumentError unless [:post, :get, :put, :delete].include?(method.downcase.to_sym)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response =
+              ssl_request(method, url(post, action, authorization), post.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)

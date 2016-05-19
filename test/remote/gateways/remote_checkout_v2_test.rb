@@ -30,6 +30,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     }
 
     @profile_id = 'cust_8AB7845C-35D6-4BAD-BED0-D0D7F75C50F0'
+    @credit_card_id = 'card_80b4185b-aae1-406e-bdf7-4abfb62febfe'
   end
 
   def test_transcript_scrubbing
@@ -155,6 +156,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_store
     @gateway.store(@credit_card, @profile_id)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_successful_unstore
+    @gateway.unstore(@profile_id, @credit_card_id)
     assert_success response
     assert_equal "Succeeded", response.message
   end

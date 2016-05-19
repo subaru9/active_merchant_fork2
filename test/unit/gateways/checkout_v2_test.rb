@@ -46,11 +46,12 @@ class CheckoutV2Test < Test::Unit::TestCase
     }
 
     @profile_id = 'cust_8AB7845C-35D6-4BAD-BED0-D0D7F75C50F0'
+    @credit_card_id = 'card_80b4185b-aae1-406e-bdf7-4abfb62febfe'
 
   end
 
   def test_successful_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -61,7 +62,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_purchase_with_additional_fields
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {descriptor_city: "london", descriptor_name: "sherlock"})
     end.check_request do |endpoint, data, headers|
       assert_match(/"descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
@@ -71,7 +72,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
     assert_failure response
@@ -79,14 +80,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal "charge_test_941CA9CE174U76BD29C8", response.authorization
 
-    capture = stub_comms do
+    capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
@@ -94,7 +95,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(failed_authorize_response)
 
@@ -104,7 +105,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(100, "")
     end.respond_with(failed_capture_response)
 
@@ -112,14 +113,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_void
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal "charge_test_941CA9CE174U76BD29C8", response.authorization
 
-    void = stub_comms do
+    void = stub_comms(@gateway, :ssl_request) do
       @gateway.void(response.authorization)
     end.respond_with(successful_void_response)
 
@@ -127,7 +128,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.void("5d53a33d960c46d00f5dc061947d998c")
     end.respond_with(failed_void_response)
 
@@ -135,14 +136,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
     assert_success response
     assert_equal "charge_test_941CA9CE174U76BD29C8", response.authorization
 
-    refund = stub_comms do
+    refund = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, response.authorization)
     end.respond_with(successful_refund_response)
 
@@ -150,7 +151,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(nil, "")
     end.respond_with(failed_refund_response)
 
@@ -158,7 +159,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
@@ -166,7 +167,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
@@ -178,7 +179,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_invalid_json
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(invalid_json_response)
 
@@ -187,7 +188,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_create_customer_profile
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.create_customer_profile(@profile)
     end.respond_with(successful_create_customer_profile_response)
     assert_success response
@@ -195,12 +196,21 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @profile_id)
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal "Succeeded", response.message
   end
+
+  def test_successful_unstore
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore(@profile_id, @credit_card_id)
+    end.respond_with(successful_unstore_response)
+    # assert_success response
+    assert_equal "ok", response.message
+  end
+
 
   private
 
@@ -216,6 +226,14 @@ class CheckoutV2Test < Test::Unit::TestCase
       <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
       <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiryYear\":\"2018\"
     )
+  end
+
+  def successful_unstore_response
+    %(
+      {
+        "message": "ok"
+      }
+     )
   end
 
   def successful_store_response
