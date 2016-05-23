@@ -165,4 +165,10 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal "Succeeded", response.message
   end
+
+  def test_successful_get_cards
+    @gateway.get_cards(@profile_id)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
 end

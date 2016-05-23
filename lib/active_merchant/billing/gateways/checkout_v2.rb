@@ -93,6 +93,10 @@ module ActiveMerchant #:nodoc:
         commit("customers/#{customer_id}/cards/#{card_id}", {}, nil, :delete)
       end
 
+      def get_cards(customer_id)
+        commit("customers/#{customer_id}/cards", {}, nil, :get)
+      end
+
       private
 
       def add_invoice(post, money, options)

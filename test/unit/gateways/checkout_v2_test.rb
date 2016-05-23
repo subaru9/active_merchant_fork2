@@ -211,6 +211,13 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal "ok", response.message
   end
 
+  def test_seccessful_get_cards
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.get_cards(@profile_id)
+    end.respond_with(successful_get_cards_response)
+    assert_success response
+    assert_equal "ok", response.message
+  end
 
   private
 
@@ -317,6 +324,41 @@ class CheckoutV2Test < Test::Unit::TestCase
     }
     )
 
+  end
+
+  def successful_get_cards_response
+    %(
+    {
+        "count": 1,
+        "data": [
+            {
+                "id": "card_3F2740AC-771B-4198-ABEA-0FEF5191F1F9",
+                "last4": "4242",
+                "paymentMethod": "Visa",
+                "fingerprint": "61308D38-57D5-4DD3-8684-B50F72A5CF7F",
+                "customerId": "cust_630C8170-8F53-406B-BCCA-92E4B8CE8643",
+                "name": "Felicia Mc Dermott III",
+                "expiryMonth": "06",
+                "expiryYear": "2018",
+                "billingDetails": {
+                    "addressLine1": "72 Myrna Parkways",
+                    "addressLine2": "Hoppe Fork",
+                    "postcode": "aq81ct",
+                    "country": "US",
+                    "city": "Serenamouth",
+                    "state": "Luzmouth",
+                    "phone" : {
+                        "countryCode" : "44",
+                        "number" : "12345678"
+                    }
+                },
+               "cvvCheck": null,
+               "avsCheck": null,
+               "responseCode": null
+            }
+        ]
+    }
+    )
   end
 
   def successful_purchase_response
