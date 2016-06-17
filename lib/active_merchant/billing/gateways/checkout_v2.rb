@@ -90,11 +90,12 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_id, card_id)
         # TODO: the customer must be assosiated with at least one card, handle this
-        commit("customers/#{customer_id}/cards/#{card_id}", {}, nil, :delete)
+               #action, post, authorization = nil, method = :post
+        commit("customers/#{customer_id}/cards/#{card_id}", nil, nil, :post)
       end
 
       def get_cards(customer_id)
-        commit("customers/#{customer_id}/cards", {}, nil, :get)
+        commit("customers/#{customer_id}/cards", nil, nil, :get)
       end
 
       private
@@ -135,8 +136,9 @@ module ActiveMerchant #:nodoc:
       def commit(action, post, authorization = nil, method = :post)
         railse ArgumentError unless [:post, :get, :put, :delete].include?(method.downcase.to_sym)
         begin
+          post = post.nil? ? nil : post.to_json
           raw_response =
-              ssl_request(method, url(post, action, authorization), post.to_json, headers)
+              ssl_request(method, url(post, action, authorization), post, headers(method))
           response = parse(raw_response)
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)
@@ -155,11 +157,14 @@ module ActiveMerchant #:nodoc:
           cvv_result: cvv_result(action, response))
       end
 
-      def headers
-        {
-          "Authorization" => @options[:secret_key],
-          "Content-Type"  => "application/json;charset=UTF-8"
-        }
+      def headers(method)
+        { "Authorization" => @options[:secret_key] }.tap do |h|
+          if method == (:post || :put)
+            h.merge!("Content-Type"  => "application/json;charset=UTF-8")
+          elsif method == :get
+            h.merge!("Accept" => "application/json;charset=UTF-8")
+          end
+        end
       end
 
       def url(post, action, authorization)
